@@ -19,10 +19,15 @@ namespace Demo.Services.Implement
             _roleManager = roleManager;
         }
 
-        public async Task<ErrorModel> Register(RegisterModel req)
+        public Task<ErrorModel> Login(LoginModel model)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ErrorModel> Register(RegisterModel model)
         {
             ErrorModel error = new ErrorModel();
-            var user = await _userManager.FindByEmailAsync(req.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
                 error.Add("Email already exists");
@@ -32,11 +37,11 @@ namespace Demo.Services.Implement
             var hasher = new PasswordHasher<User>();
             user = new User()
             {
-                PasswordHash = hasher.HashPassword(null, req.Password),
-                FirstName = req.FirstName,
-                LastName = req.LastName,
-                Email = req.Email,
-                UserName = req.Email,
+                PasswordHash = hasher.HashPassword(null, model.Password),
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                UserName = model.Email,
                 DateCreated = DateTime.UtcNow
             };
 

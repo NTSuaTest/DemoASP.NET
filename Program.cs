@@ -32,6 +32,7 @@ builder.Services.AddIdentity<User, Role>(options =>
 
 var app = builder.Build();
 
+// This comment to test merger
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

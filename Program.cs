@@ -58,6 +58,9 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseHttpsRedirection();
+
+// This comment to test merger
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

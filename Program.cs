@@ -1,6 +1,11 @@
 using Demo.Entity;
 using Demo.Services.Implement;
 using Demo.Services.Interface;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +38,20 @@ builder.Services.AddIdentity<User, Role>(options =>
     .AddEntityFrameworkStores<DbAPIContext>()
     .AddDefaultTokenProviders();
 
+
+builder.Services.AddHangfire(x => x
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_110)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DbConnection"), new PostgreSqlStorageOptions
+    {
+        QueuePollInterval = TimeSpan.FromSeconds(30),
+        UseNativeDatabaseTransactions = false,
+        DistributedLockTimeout = TimeSpan.FromMinutes(5),
+        InvisibilityTimeout = TimeSpan.FromMinutes(5),
+    }));
+builder.Services.AddHangfireServer();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -56,6 +75,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
@@ -68,12 +88,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+//app.UseFileServer(new FileServerOptions()
+//{
+//    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Resources")),
+//    RequestPath = new PathString("/Resources")
+//});
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHangfireDashboard();
+
+app.UseHangfireDashboard();
+BackgroundJob.Enqueue(() => Console.WriteLine("Hello world from Hangfire!"));
+//RecurringJob.AddOrUpdate<IOrderService>("Create_Order_Monthly_Payment", x => x.CreateOrderMonthly(), Cron.Monthly);
 
 app.Run();

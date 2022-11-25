@@ -16,12 +16,19 @@ namespace Demo.Controllers
         {
             _userService = userService;
         }
+
         [HttpPost("Register")] 
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             ErrorModel error = await _userService.Register(model);
             if (!error.IsEmpty)
                 return BadRequest(error);
+            return Ok();
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        {
             return Ok();
         }
     }

@@ -16,7 +16,7 @@ namespace Demo.Controllers
         {
             _userService = userService;
         }
-        [HttpPost] 
+        [HttpPost("Register")] 
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             ErrorModel error = await _userService.Register(model);

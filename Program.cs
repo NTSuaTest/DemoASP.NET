@@ -6,6 +6,11 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +38,7 @@ builder.Services.AddIdentity<User, Role>(options =>
     .AddEntityFrameworkStores<DbAPIContext>()
     .AddDefaultTokenProviders();
 
+
 builder.Services.AddHangfire(x => x
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_110)
     .UseSimpleAssemblyNameTypeSerializer()
@@ -46,6 +52,30 @@ builder.Services.AddHangfire(x => x
     }));
 builder.Services.AddHangfireServer();
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey
+        (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = false,
+        ValidateIssuerSigningKey = true,
+        //ClockSkew = TimeSpan.Zero // remove delay of token when expire,
+    };
+});
+
+builder.Services.AddAuthorization();
+
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
@@ -58,11 +88,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 //app.UseFileServer(new FileServerOptions()
 //{
 //    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Resources")),
 //    RequestPath = new PathString("/Resources")
 //});
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
 
 app.UseAuthorization();
 

@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { 
+        Title = "Demo API", 
+        Version = "v1.0.0",
+        //TermsOfService = new Uri("https://localhost:5001"),
+        //License = new OpenApiLicense
+        //{
+        //    Name = "Use under LICX",
+        //    Url = new Uri("https://localhost:5001"),
+        //}
+    });
+});
 
 builder.Services.AddEntityFrameworkNpgsql().AddDbContext<DbAPIContext>(options =>
 {
@@ -30,6 +45,7 @@ builder.Services.AddEntityFrameworkNpgsql().AddDbContext<DbAPIContext>(options =
 });
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 
 builder.Services.AddIdentity<User, Role>(options =>
 {
@@ -82,7 +98,7 @@ app.UseHttpsRedirection();
 
 // This comment to test merger
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
